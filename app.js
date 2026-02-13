@@ -1,10 +1,10 @@
 ﻿const LEGACY_STORAGE_KEY = "mt2-completion-v1";
-const PROFILE_PREFIX = "mt2-profile-v1:";
-const ACTIVE_PROFILE_KEY = "mt2-active-profile-v1";
+const SNAPSHOT_PREFIX = "mt2-snapshot-v1:";
+const ACTIVE_CODE_KEY = "mt2-active-code-v1";
 
-const PROFILE_WORDS_A = ["amber", "ashen", "blazing", "cinder", "crystal", "ember", "frozen", "golden", "hollow", "iron", "lunar", "misty", "onyx", "pyre", "quiet", "riven", "scarlet", "silver", "storm", "velvet"];
-const PROFILE_WORDS_B = ["anvil", "banner", "crown", "drake", "ember", "forge", "garden", "harbor", "lantern", "memory", "needle", "oracle", "petal", "quartz", "river", "signal", "temple", "throne", "vault", "whisper"];
-const PROFILE_WORDS_C = ["alpha", "bridge", "cipher", "delta", "echo", "flame", "grove", "horizon", "isle", "jewel", "knight", "lotus", "meteor", "nova", "oath", "prism", "quest", "rift", "spire", "trail"];
+const CODE_WORDS_A = ["amber", "ashen", "blazing", "cinder", "crystal", "ember", "frozen", "golden", "hollow", "iron", "lunar", "misty", "onyx", "pyre", "quiet", "riven", "scarlet", "silver", "storm", "velvet"];
+const CODE_WORDS_B = ["anvil", "banner", "crown", "drake", "ember", "forge", "garden", "harbor", "lantern", "memory", "needle", "oracle", "petal", "quartz", "river", "signal", "temple", "throne", "vault", "whisper"];
+const CODE_WORDS_C = ["alpha", "bridge", "cipher", "delta", "echo", "flame", "grove", "horizon", "isle", "jewel", "knight", "lotus", "meteor", "nova", "oath", "prism", "quest", "rift", "spire", "trail"];
 
 const CLANS = [
   { id: "banished", name: "Banished", origin: "mt2", color: "#1cc9ec", champions: ["Fel", "Talos"] },
@@ -21,7 +21,6 @@ const CLANS = [
   { id: "wurmkin", name: "Wurmkin", origin: "mt1", color: "#fd80f5", champions: ["Spine Chief", "Echowright"] }
 ];
 
-// Sourced from the JSON you provided.
 const CHAMPION_IMAGE_BY_NAME = {
   Fel: "https://static.wikitide.net/monstertrain2wiki/d/d3/PLR_Fel.png",
   Talos: "https://static.wikitide.net/monstertrain2wiki/7/75/PLR_Talos.png",
@@ -49,7 +48,6 @@ const CHAMPION_IMAGE_BY_NAME = {
   Echowright: "https://static.wikitide.net/monstertrain2wiki/5/53/Echowright.webp"
 };
 
-// Sourced from the clan logo JSON you provided.
 const CLAN_LOGO_BY_NAME = {
   Banished: "https://static.wikitide.net/monstertrain2wiki/e/ea/ClanBanished.png",
   Pyreborne: "https://static.wikitide.net/monstertrain2wiki/d/d5/ClanPyreborne.png",
@@ -74,16 +72,16 @@ const mainOriginSelect = document.getElementById("main-origin");
 const allyOriginSelect = document.getElementById("ally-origin");
 const profileCodeInput = document.getElementById("profile-code");
 const loadProfileBtn = document.getElementById("load-profile");
-const newProfileBtn = document.getElementById("new-profile");
+const copyCodeBtn = document.getElementById("copy-code");
 const profileStatusEl = document.getElementById("profile-status");
 const resetBtn = document.getElementById("reset");
 const exportBtn = document.getElementById("export");
 const importBtn = document.getElementById("import");
 const importFileInput = document.getElementById("import-file");
 
-let currentProfileCode = initializeProfileCode();
+let currentCodeKey = initializeActiveCodeKey();
 /** @type {Record<string, boolean>} */
-let state = loadStateForProfile(currentProfileCode);
+let state = loadSnapshot(currentCodeKey);
 
 function championRows() {
   return CLANS.flatMap((clan) =>
@@ -103,44 +101,68 @@ function keyFor(row, allyClanId) {
   return `${row.clanId}:${row.championIndex}:${allyClanId}`;
 }
 
-function normalizeProfileCode(input) {
-  const words = String(input)
-    .toLowerCase()
-    .trim()
-    .split(/[^a-z0-9]+/)
-    .filter(Boolean);
+function capitalize(word) {
+  return word.charAt(0).toUpperCase() + word.slice(1);
+}
 
+function wordsFromInput(input) {
+  const raw = String(input || "").trim();
+  if (!raw) return null;
+
+  const segmented = /[^a-zA-Z0-9]/.test(raw)
+    ? raw.split(/[^a-zA-Z0-9]+/)
+    : raw.match(/[A-Z]?[a-z0-9]+|[A-Z]+(?![a-z])/g) || [];
+
+  const words = segmented.map((word) => word.toLowerCase()).filter(Boolean);
   if (words.length !== 3) return null;
-  return words.join(" ");
+  return words;
+}
+
+function codeDisplayFromWords(words) {
+  return words.map(capitalize).join("");
+}
+
+function codeKeyFromWords(words) {
+  return words.join("-");
+}
+
+function parseCodeInput(input) {
+  const words = wordsFromInput(input);
+  if (!words) return null;
+  return {
+    words,
+    codeKey: codeKeyFromWords(words),
+    display: codeDisplayFromWords(words)
+  };
 }
 
 function randomWord(list) {
   return list[Math.floor(Math.random() * list.length)];
 }
 
-function generateProfileCode() {
-  return `${randomWord(PROFILE_WORDS_A)} ${randomWord(PROFILE_WORDS_B)} ${randomWord(PROFILE_WORDS_C)}`;
+function generateRandomWords() {
+  return [randomWord(CODE_WORDS_A), randomWord(CODE_WORDS_B), randomWord(CODE_WORDS_C)];
 }
 
-function initializeProfileCode() {
-  const existing = localStorage.getItem(ACTIVE_PROFILE_KEY);
-  const normalizedExisting = normalizeProfileCode(existing || "");
-  if (normalizedExisting) return normalizedExisting;
+function hasSnapshot(codeKey) {
+  return localStorage.getItem(`${SNAPSHOT_PREFIX}${codeKey}`) !== null;
+}
 
-  const freshCode = generateProfileCode();
-  localStorage.setItem(ACTIVE_PROFILE_KEY, freshCode);
-
-  const legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
-  if (legacyRaw) {
-    localStorage.setItem(`${PROFILE_PREFIX}${freshCode}`, legacyRaw);
+function generateUniqueCode() {
+  for (let i = 0; i < 500; i += 1) {
+    const words = generateRandomWords();
+    const codeKey = codeKeyFromWords(words);
+    if (!hasSnapshot(codeKey)) {
+      return { words, codeKey, display: codeDisplayFromWords(words) };
+    }
   }
 
-  return freshCode;
+  throw new Error("Unable to generate unique 3-word code.");
 }
 
-function loadStateForProfile(profileCode) {
+function loadSnapshot(codeKey) {
   try {
-    const raw = localStorage.getItem(`${PROFILE_PREFIX}${profileCode}`);
+    const raw = localStorage.getItem(`${SNAPSHOT_PREFIX}${codeKey}`);
     if (!raw) return {};
     const parsed = JSON.parse(raw);
     return typeof parsed === "object" && parsed ? parsed : {};
@@ -149,8 +171,45 @@ function loadStateForProfile(profileCode) {
   }
 }
 
-function saveState() {
-  localStorage.setItem(`${PROFILE_PREFIX}${currentProfileCode}`, JSON.stringify(state));
+function saveSnapshot(codeKey, snapshotState) {
+  localStorage.setItem(`${SNAPSHOT_PREFIX}${codeKey}`, JSON.stringify(snapshotState));
+}
+
+function setActiveCodeKey(codeKey) {
+  currentCodeKey = codeKey;
+  localStorage.setItem(ACTIVE_CODE_KEY, codeKey);
+}
+
+function displayFromCodeKey(codeKey) {
+  return codeKey
+    .split("-")
+    .filter(Boolean)
+    .map(capitalize)
+    .join("");
+}
+
+function initializeActiveCodeKey() {
+  const storedCodeKey = localStorage.getItem(ACTIVE_CODE_KEY);
+  if (storedCodeKey && hasSnapshot(storedCodeKey)) {
+    return storedCodeKey;
+  }
+
+  const legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
+  const fresh = generateUniqueCode();
+
+  if (legacyRaw) {
+    try {
+      const parsed = JSON.parse(legacyRaw);
+      saveSnapshot(fresh.codeKey, typeof parsed === "object" && parsed ? parsed : {});
+    } catch {
+      saveSnapshot(fresh.codeKey, {});
+    }
+  } else {
+    saveSnapshot(fresh.codeKey, {});
+  }
+
+  localStorage.setItem(ACTIVE_CODE_KEY, fresh.codeKey);
+  return fresh.codeKey;
 }
 
 function setProfileStatus(message, isError = false) {
@@ -158,14 +217,22 @@ function setProfileStatus(message, isError = false) {
   profileStatusEl.style.color = isError ? "#ffc3cf" : "";
 }
 
-function switchProfile(profileCode) {
-  currentProfileCode = profileCode;
-  localStorage.setItem(ACTIVE_PROFILE_KEY, profileCode);
-  state = loadStateForProfile(profileCode);
-  profileCodeInput.value = profileCode;
-  setProfileStatus(`Active code: ${profileCode}`);
+function activateSnapshot(codeKey, nextState = null) {
+  setActiveCodeKey(codeKey);
+  state = nextState ?? loadSnapshot(codeKey);
+  profileCodeInput.value = displayFromCodeKey(codeKey);
+  setProfileStatus(`Current code: ${displayFromCodeKey(codeKey)}`);
   randomResultEl.textContent = "No run selected yet.";
   render();
+}
+
+function commitNewSnapshot(nextState) {
+  const fresh = generateUniqueCode();
+  saveSnapshot(fresh.codeKey, nextState);
+  setActiveCodeKey(fresh.codeKey);
+  state = nextState;
+  profileCodeInput.value = fresh.display;
+  setProfileStatus(`Saved new code: ${fresh.display}`);
 }
 
 function render() {
@@ -256,9 +323,10 @@ function render() {
         const key = keyFor(row, allyClan.id);
         if (state[key]) toggle.classList.add("done");
         toggle.addEventListener("click", () => {
-          state[key] = !state[key];
-          if (!state[key]) delete state[key];
-          saveState();
+          const nextState = { ...state };
+          nextState[key] = !nextState[key];
+          if (!nextState[key]) delete nextState[key];
+          commitNewSnapshot(nextState);
           renderStats();
           toggle.classList.toggle("done", Boolean(state[key]));
         });
@@ -347,18 +415,30 @@ function download(filename, text) {
 randomizeBtn.addEventListener("click", randomizeNextRun);
 
 loadProfileBtn.addEventListener("click", () => {
-  const normalized = normalizeProfileCode(profileCodeInput.value);
-  if (!normalized) {
-    setProfileStatus("Use exactly 3 words (letters/numbers).", true);
+  const parsed = parseCodeInput(profileCodeInput.value);
+  if (!parsed) {
+    setProfileStatus("Code must be exactly 3 words (e.g. BlazingCrownSpire).", true);
     return;
   }
 
-  switchProfile(normalized);
+  if (!hasSnapshot(parsed.codeKey)) {
+    setProfileStatus(`Code not found: ${parsed.display}`, true);
+    return;
+  }
+
+  activateSnapshot(parsed.codeKey);
 });
 
-newProfileBtn.addEventListener("click", () => {
-  const code = generateProfileCode();
-  switchProfile(code);
+copyCodeBtn.addEventListener("click", async () => {
+  const currentCode = displayFromCodeKey(currentCodeKey);
+  try {
+    await navigator.clipboard.writeText(currentCode);
+    setProfileStatus(`Copied code: ${currentCode}`);
+  } catch {
+    profileCodeInput.focus();
+    profileCodeInput.select();
+    setProfileStatus("Copy failed in browser. Select and copy the code manually.", true);
+  }
 });
 
 profileCodeInput.addEventListener("keydown", (event) => {
@@ -367,21 +447,21 @@ profileCodeInput.addEventListener("keydown", (event) => {
 });
 
 resetBtn.addEventListener("click", () => {
-  if (!window.confirm(`Clear all tracked wins for code '${currentProfileCode}'?`)) return;
-  state = {};
-  saveState();
+  if (!window.confirm("Create a new blank snapshot code?")) return;
+  commitNewSnapshot({});
   randomResultEl.textContent = "No run selected yet.";
   render();
 });
 
 exportBtn.addEventListener("click", () => {
+  const displayCode = displayFromCodeKey(currentCodeKey);
   const payload = {
-    version: 2,
-    profileCode: currentProfileCode,
+    version: 3,
+    snapshotCode: displayCode,
     exportedAt: new Date().toISOString(),
     state
   };
-  download(`mt2-completion-${currentProfileCode.replace(/\s+/g, "-")}.json`, JSON.stringify(payload, null, 2));
+  download(`mt2-completion-${displayCode}.json`, JSON.stringify(payload, null, 2));
 });
 
 importBtn.addEventListener("click", () => importFileInput.click());
@@ -397,9 +477,8 @@ importFileInput.addEventListener("change", async (event) => {
       throw new Error("Invalid save format.");
     }
 
-    state = parsed.state;
-    saveState();
-    randomResultEl.textContent = "Save imported into active 3-word code.";
+    commitNewSnapshot(parsed.state);
+    randomResultEl.textContent = "Imported as a new snapshot code.";
     render();
   } catch (error) {
     randomResultEl.textContent = `Import failed: ${error.message}`;
@@ -408,4 +487,4 @@ importFileInput.addEventListener("change", async (event) => {
   }
 });
 
-switchProfile(currentProfileCode);
+activateSnapshot(currentCodeKey, state);
