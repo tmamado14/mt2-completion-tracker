@@ -1,0 +1,277 @@
+﻿:root {
+  --bg: #05070b;
+  --grid-line: #1a2230;
+  --panel: #101724;
+  --panel-2: #0d131f;
+  --text: #ecf2ff;
+  --muted: #aab6ce;
+  --accent: #3cc5ff;
+  --danger: #ff4a6f;
+  --cell: 42px;
+  --name-col: 280px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: "Rajdhani", sans-serif;
+  color: var(--text);
+  background: radial-gradient(circle at 20% 20%, #0f1830 0%, var(--bg) 35%),
+    radial-gradient(circle at 85% 10%, #1d1231 0%, transparent 35%), var(--bg);
+}
+
+.bg {
+  position: fixed;
+  inset: 0;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 36px 36px;
+  pointer-events: none;
+}
+
+.app-shell {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 18px;
+  padding: 20px;
+}
+
+h1 {
+  margin: 0;
+  font-family: "Chakra Petch", sans-serif;
+  letter-spacing: 0.03em;
+}
+
+.subhead {
+  margin: 4px 0 16px;
+  color: var(--muted);
+}
+
+.tracker {
+  overflow: auto;
+  border: 1px solid var(--grid-line);
+  background: #0b111b;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: var(--name-col) repeat(var(--clan-count), var(--cell));
+}
+
+.cell {
+  width: var(--cell);
+  height: var(--cell);
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.name-cell {
+  width: var(--name-col);
+  justify-content: flex-start;
+  padding: 4px 8px;
+  border-right: 1px solid rgba(0, 0, 0, 0.4);
+  font-size: 20px;
+  gap: 8px;
+}
+
+.header-cell {
+  font-size: 12px;
+  line-height: 1.05;
+  text-align: center;
+  padding: 3px;
+  font-family: "Chakra Petch", sans-serif;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+}
+
+.clan-header {
+  padding: 2px;
+}
+
+.clan-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+}
+
+.row-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.champion-name,
+.clan-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.champion-name {
+  font-weight: 700;
+  font-size: 21px;
+}
+
+.clan-name {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.champion-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  object-fit: cover;
+  border: 1px solid rgba(10, 16, 27, 0.35);
+  background: rgba(10, 16, 27, 0.2);
+  flex: 0 0 auto;
+}
+
+button.win-toggle {
+  appearance: none;
+  width: 28px;
+  height: 28px;
+  border: 3px solid #0d1118;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: transform 120ms ease, background-color 120ms ease;
+}
+
+button.win-toggle:hover {
+  transform: translateY(-1px);
+}
+
+button.win-toggle.done {
+  background: #00d07a;
+  border-color: #052817;
+}
+
+button.win-toggle.done::after {
+  content: "\2713";
+  font-size: 18px;
+  font-weight: 700;
+  color: #03210f;
+}
+
+button.win-toggle:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  background: transparent;
+}
+
+.right-pane {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent), var(--panel);
+  border: 1px solid #2a3447;
+  padding: 14px;
+}
+
+.card h2 {
+  margin: 0 0 8px;
+  font-size: 36px;
+  font-family: "Chakra Petch", sans-serif;
+}
+
+.big {
+  margin: 0;
+  font-size: 44px;
+  line-height: 1;
+}
+
+.percent {
+  margin: 6px 0 0;
+  font-size: 30px;
+  color: var(--accent);
+}
+
+.random-card button,
+.controls-card button {
+  width: 100%;
+  margin-bottom: 8px;
+  border: 1px solid #364662;
+  background: var(--panel-2);
+  color: var(--text);
+  padding: 9px 10px;
+  cursor: pointer;
+  font-family: "Rajdhani", sans-serif;
+  font-size: 20px;
+}
+
+.profile-input {
+  width: 100%;
+  margin: 0 0 10px;
+  border: 1px solid #364662;
+  background: #0d131f;
+  color: var(--text);
+  padding: 8px 10px;
+  font-family: "Rajdhani", sans-serif;
+  font-size: 18px;
+}
+
+.filter-label {
+  display: block;
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 17px;
+}
+
+.filter-select {
+  width: 100%;
+  margin: 0 0 10px;
+  border: 1px solid #364662;
+  background: #0d131f;
+  color: var(--text);
+  padding: 8px 10px;
+  font-family: "Rajdhani", sans-serif;
+  font-size: 18px;
+}
+
+.controls-card button:last-child {
+  margin-bottom: 0;
+}
+
+.controls-card .danger {
+  border-color: #663241;
+  color: #ffc3cf;
+}
+
+.random-result {
+  margin: 6px 0 0;
+  color: #f7dc94;
+  font-size: 22px;
+}
+
+.profile-status {
+  margin: 2px 0 10px;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+@media (max-width: 1180px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .right-pane {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+}

@@ -1,0 +1,173 @@
+{
+  "game": "Monster Train 2",
+  "champions": [
+    {
+      "id": "fel",
+      "name": "Fel",
+      "origin": "MT2",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/d/d3/PLR_Fel.png",
+      "file_type": "png"
+    },
+    {
+      "id": "talos",
+      "name": "Talos",
+      "origin": "MT2",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/7/75/PLR_Talos.png",
+      "file_type": "png"
+    },
+    {
+      "id": "lord_fenix",
+      "name": "Lord Fenix",
+      "origin": "MT2",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/b/b5/PLR_Fenix.png",
+      "file_type": "png"
+    },
+    {
+      "id": "lady_gilda",
+      "name": "Lady Gilda",
+      "origin": "MT2",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/5/5a/PLR_LadyGilda.png",
+      "file_type": "png"
+    },
+    {
+      "id": "ekka",
+      "name": "Ekka",
+      "origin": "MT2",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/d/d3/PLR_Ekka.png",
+      "file_type": "png"
+    },
+    {
+      "id": "arduhn",
+      "name": "Arduhn",
+      "origin": "MT2",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/f/f8/PLR_Arduhn.png",
+      "file_type": "png"
+    },
+    {
+      "id": "bolete_the_guillotine",
+      "name": "Bolete the Guillotine",
+      "origin": "MT2",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/2/25/PLR_BoletetheGuillotine.png",
+      "file_type": "png"
+    },
+    {
+      "id": "madame_lionsmane",
+      "name": "Madame Lionsmane",
+      "origin": "MT2",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/b/b8/PLR_MadameLionsmane.png",
+      "file_type": "png"
+    },
+    {
+      "id": "orechi",
+      "name": "Orechi",
+      "origin": "MT2",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/b/b9/PLR_Orechi.png",
+      "file_type": "png"
+    },
+    {
+      "id": "baron_grael",
+      "name": "Baron Grael",
+      "origin": "MT2",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/c/ce/PLR_BaronGrael.png",
+      "file_type": "png"
+    },
+    {
+      "id": "herzal",
+      "name": "Herzal",
+      "origin": "MT2",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/4/49/PLR_Herzal.png",
+      "file_type": "png"
+    },
+    {
+      "id": "heph",
+      "name": "Heph",
+      "origin": "MT2",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/3/31/PLR_Heph_MT2.png",
+      "file_type": "png"
+    },
+    {
+      "id": "hornbreaker_prince",
+      "name": "Hornbreaker Prince",
+      "origin": "MT1_Returning",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/6/65/PLR_HornbreakerPrince.png",
+      "file_type": "png"
+    },
+    {
+      "id": "shardtail_queen",
+      "name": "Shardtail Queen",
+      "origin": "MT1_Returning",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/2/22/PLR_ShardtailQueen.png",
+      "file_type": "png"
+    },
+    {
+      "id": "the_sentient",
+      "name": "The Sentient",
+      "origin": "MT1_Returning",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/a/ab/PLR_TheSentient.png",
+      "file_type": "png"
+    },
+    {
+      "id": "wyldenten",
+      "name": "Wyldenten",
+      "origin": "MT1_Returning",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/1/17/PLR_Wyldenten.png",
+      "file_type": "png"
+    },
+    {
+      "id": "tethys_titansbane",
+      "name": "Tethys Titansbane",
+      "origin": "MT1_Returning",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/0/03/Tethys_Titansbane.webp",
+      "file_type": "webp"
+    },
+    {
+      "id": "solgard_the_martyr",
+      "name": "Solgard the Martyr",
+      "origin": "MT1_Returning",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/4/46/Solgard_the_Martyr.webp",
+      "file_type": "webp"
+    },
+    {
+      "id": "penumbra",
+      "name": "Penumbra",
+      "origin": "MT1_Returning",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/3/30/PLR_Penumbra.png",
+      "file_type": "png"
+    },
+    {
+      "id": "primordium",
+      "name": "Primordium",
+      "origin": "MT1_Returning",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/e/e6/PLR_Primordium.png",
+      "file_type": "png"
+    },
+    {
+      "id": "rector_flicker",
+      "name": "Rector Flicker",
+      "origin": "MT1_Returning",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/c/c0/PLR_RectorFlicker.png",
+      "file_type": "png"
+    },
+    {
+      "id": "little_fade",
+      "name": "Little Fade",
+      "origin": "MT1_Returning",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/b/b1/PLR_LittleFade.png",
+      "file_type": "png"
+    },
+    {
+      "id": "spine_chief",
+      "name": "Spine Chief",
+      "origin": "MT1_Returning",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/1/17/PLR_SpineChief.png",
+      "file_type": "png"
+    },
+    {
+      "id": "echowright",
+      "name": "Echowright",
+      "origin": "MT1_Returning",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/5/53/Echowright.webp",
+      "file_type": "webp"
+    }
+  ]
+}

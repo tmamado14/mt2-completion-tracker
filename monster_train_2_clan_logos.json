@@ -1,0 +1,71 @@
+{
+  "game": "Monster Train 2",
+  "clans": [
+    {
+      "id": "banished",
+      "name": "Banished",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/e/ea/ClanBanished.png",
+      "file_type": "png"
+    },
+    {
+      "id": "pyreborne",
+      "name": "Pyreborne",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/d/d5/ClanPyreborne.png",
+      "file_type": "png"
+    },
+    {
+      "id": "luna_coven",
+      "name": "Luna Coven",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/d/d1/ClanLunaCoven.png",
+      "file_type": "png"
+    },
+    {
+      "id": "underlegion",
+      "name": "Underlegion",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/c/cf/ClanUnderlegion.png",
+      "file_type": "png"
+    },
+    {
+      "id": "lazarus_league",
+      "name": "Lazarus League",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/d/dc/ClanLazarusLeague.png",
+      "file_type": "png"
+    },
+    {
+      "id": "railforged",
+      "name": "Railforged",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/a/a0/ClanRailforged.png",
+      "file_type": "png"
+    },
+    {
+      "id": "hellhorned",
+      "name": "Hellhorned",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/a/a8/ClanHellhorned.png",
+      "file_type": "png"
+    },
+    {
+      "id": "awoken",
+      "name": "Awoken",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/5/5e/ClanAwoken.png",
+      "file_type": "png"
+    },
+    {
+      "id": "umbra",
+      "name": "Umbra",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/5/53/ClanUmbra.png",
+      "file_type": "png"
+    },
+    {
+      "id": "melting_remnant",
+      "name": "Melting Remnant",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/0/03/ClanMeltingRemnant.png",
+      "file_type": "png"
+    },
+    {
+      "id": "wurmkin",
+      "name": "Wurmkin",
+      "image_url": "https://static.wikitide.net/monstertrain2wiki/b/b3/ClanWurmkin.png",
+      "file_type": "png"
+    }
+  ]
+}

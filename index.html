@@ -1,0 +1,74 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MT2 Covenant 10 Titan Win Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Chakra+Petch:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="bg"></div>
+    <main class="app-shell">
+      <section class="left-pane">
+        <h1>Monster Train 2 Completion Tracker</h1>
+        <p class="subhead">Covenant 10 Titan Wins</p>
+
+        <div id="tracker" class="tracker"></div>
+      </section>
+
+      <aside class="right-pane">
+        <section class="card completion-card">
+          <h2>Completion</h2>
+          <p id="completion-count" class="big">0 / 0</p>
+          <p id="completion-pct" class="percent">0.00%</p>
+        </section>
+
+        <section class="card random-card">
+          <label class="filter-label" for="main-origin">Main Champion Pool</label>
+          <select id="main-origin" class="filter-select">
+            <option value="both">Both (MT1 + MT2)</option>
+            <option value="mt2">Only MT2</option>
+            <option value="mt1">Only MT1</option>
+          </select>
+
+          <label class="filter-label" for="ally-origin">Allied Clan Pool</label>
+          <select id="ally-origin" class="filter-select">
+            <option value="both">Both (MT1 + MT2)</option>
+            <option value="mt2">Only MT2</option>
+            <option value="mt1">Only MT1</option>
+          </select>
+
+          <button id="randomize" type="button">Randomize Next Run</button>
+          <p id="random-result" class="random-result">No run selected yet.</p>
+        </section>
+
+        <section class="card controls-card">
+          <label class="filter-label" for="profile-code">3-Word Save Code</label>
+          <input
+            id="profile-code"
+            class="profile-input"
+            type="text"
+            placeholder="e.g. ember steel crown"
+            autocomplete="off"
+          />
+          <button id="load-profile" type="button">Load / Switch Code</button>
+          <button id="new-profile" type="button">Generate New Code</button>
+          <p id="profile-status" class="profile-status">Profile not loaded.</p>
+
+          <button id="reset" type="button" class="danger">Reset Progress</button>
+          <button id="export" type="button">Export Save</button>
+          <button id="import" type="button">Import Save</button>
+          <input id="import-file" type="file" accept="application/json" hidden />
+        </section>
+      </aside>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
