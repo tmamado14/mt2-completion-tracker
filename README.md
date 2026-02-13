@@ -42,18 +42,28 @@ Each clan entry shape:
 
 ## Save data
 
-Progress is tied to immutable 3-word snapshot codes (for example `BlazingCrownSpire`).
+Progress is tied to immutable 3-word snapshot codes (for example `BlazingCrownSpire`) and stored globally in Supabase.
 
-- Enter a code and click `Load Code` to open that exact saved snapshot
+- Enter a code and click `Load Code` to fetch that exact snapshot
 - Every tracker change creates a brand-new code automatically
 - Older codes still load their older state; they are not overwritten
 - `Copy Current Code` helps you save/share the active snapshot code
-- Last active code is remembered in your browser
+- Last active code is remembered in your browser for convenience
 
-Storage keys:
+Local storage key:
 
 - Active code pointer: `mt2-active-code-v1`
-- Snapshot data prefix: `mt2-snapshot-v1:`
+
+Supabase table:
+
+- `public.snapshots` with columns `code`, `state_json`, `created_at`
+
+### Supabase config in app
+
+`app.js` contains:
+
+- `SUPABASE_URL`
+- `SUPABASE_PUBLISHABLE_KEY`
 
 Use the UI buttons to:
 

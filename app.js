@@ -1,5 +1,7 @@
-﻿const LEGACY_STORAGE_KEY = "mt2-completion-v1";
-const SNAPSHOT_PREFIX = "mt2-snapshot-v1:";
+﻿const SUPABASE_URL = "https://nltblyjdddhksuubhpmz.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_MHp7n5vXnRp2yRHurY8-Mg_jfHs6xhB";
+
+const LEGACY_STORAGE_KEY = "mt2-completion-v1";
 const ACTIVE_CODE_KEY = "mt2-active-code-v1";
 
 const CODE_WORDS_A = ["amber", "ashen", "blazing", "cinder", "crystal", "ember", "frozen", "golden", "hollow", "iron", "lunar", "misty", "onyx", "pyre", "quiet", "riven", "scarlet", "silver", "storm", "velvet"];
@@ -79,9 +81,10 @@ const exportBtn = document.getElementById("export");
 const importBtn = document.getElementById("import");
 const importFileInput = document.getElementById("import-file");
 
-let currentCodeKey = initializeActiveCodeKey();
+let currentCodeKey = "";
 /** @type {Record<string, boolean>} */
-let state = loadSnapshot(currentCodeKey);
+let state = {};
+let isBusy = false;
 
 function championRows() {
   return CLANS.flatMap((clan) =>
@@ -144,42 +147,6 @@ function generateRandomWords() {
   return [randomWord(CODE_WORDS_A), randomWord(CODE_WORDS_B), randomWord(CODE_WORDS_C)];
 }
 
-function hasSnapshot(codeKey) {
-  return localStorage.getItem(`${SNAPSHOT_PREFIX}${codeKey}`) !== null;
-}
-
-function generateUniqueCode() {
-  for (let i = 0; i < 500; i += 1) {
-    const words = generateRandomWords();
-    const codeKey = codeKeyFromWords(words);
-    if (!hasSnapshot(codeKey)) {
-      return { words, codeKey, display: codeDisplayFromWords(words) };
-    }
-  }
-
-  throw new Error("Unable to generate unique 3-word code.");
-}
-
-function loadSnapshot(codeKey) {
-  try {
-    const raw = localStorage.getItem(`${SNAPSHOT_PREFIX}${codeKey}`);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw);
-    return typeof parsed === "object" && parsed ? parsed : {};
-  } catch {
-    return {};
-  }
-}
-
-function saveSnapshot(codeKey, snapshotState) {
-  localStorage.setItem(`${SNAPSHOT_PREFIX}${codeKey}`, JSON.stringify(snapshotState));
-}
-
-function setActiveCodeKey(codeKey) {
-  currentCodeKey = codeKey;
-  localStorage.setItem(ACTIVE_CODE_KEY, codeKey);
-}
-
 function displayFromCodeKey(codeKey) {
   return codeKey
     .split("-")
@@ -188,28 +155,12 @@ function displayFromCodeKey(codeKey) {
     .join("");
 }
 
-function initializeActiveCodeKey() {
-  const storedCodeKey = localStorage.getItem(ACTIVE_CODE_KEY);
-  if (storedCodeKey && hasSnapshot(storedCodeKey)) {
-    return storedCodeKey;
-  }
-
-  const legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
-  const fresh = generateUniqueCode();
-
-  if (legacyRaw) {
-    try {
-      const parsed = JSON.parse(legacyRaw);
-      saveSnapshot(fresh.codeKey, typeof parsed === "object" && parsed ? parsed : {});
-    } catch {
-      saveSnapshot(fresh.codeKey, {});
-    }
-  } else {
-    saveSnapshot(fresh.codeKey, {});
-  }
-
-  localStorage.setItem(ACTIVE_CODE_KEY, fresh.codeKey);
-  return fresh.codeKey;
+function setBusy(flag) {
+  isBusy = flag;
+  loadProfileBtn.disabled = flag;
+  copyCodeBtn.disabled = flag;
+  resetBtn.disabled = flag;
+  importBtn.disabled = flag;
 }
 
 function setProfileStatus(message, isError = false) {
@@ -217,22 +168,71 @@ function setProfileStatus(message, isError = false) {
   profileStatusEl.style.color = isError ? "#ffc3cf" : "";
 }
 
-function activateSnapshot(codeKey, nextState = null) {
-  setActiveCodeKey(codeKey);
-  state = nextState ?? loadSnapshot(codeKey);
-  profileCodeInput.value = displayFromCodeKey(codeKey);
-  setProfileStatus(`Current code: ${displayFromCodeKey(codeKey)}`);
-  randomResultEl.textContent = "No run selected yet.";
-  render();
+function supabaseHeaders() {
+  return {
+    apikey: SUPABASE_PUBLISHABLE_KEY,
+    Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+    "Content-Type": "application/json"
+  };
 }
 
-function commitNewSnapshot(nextState) {
-  const fresh = generateUniqueCode();
-  saveSnapshot(fresh.codeKey, nextState);
-  setActiveCodeKey(fresh.codeKey);
-  state = nextState;
-  profileCodeInput.value = fresh.display;
-  setProfileStatus(`Saved new code: ${fresh.display}`);
+async function fetchSnapshot(codeKey) {
+  const url = `${SUPABASE_URL}/rest/v1/snapshots?code=eq.${encodeURIComponent(codeKey)}&select=state_json&limit=1`;
+  const response = await fetch(url, {
+    method: "GET",
+    headers: supabaseHeaders()
+  });
+
+  if (!response.ok) {
+    throw new Error(`Lookup failed (${response.status})`);
+  }
+
+  const rows = await response.json();
+  if (!Array.isArray(rows) || !rows.length) return null;
+
+  const snapshot = rows[0]?.state_json;
+  return typeof snapshot === "object" && snapshot ? snapshot : {};
+}
+
+async function tryInsertSnapshot(codeKey, snapshotState) {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/snapshots`, {
+    method: "POST",
+    headers: {
+      ...supabaseHeaders(),
+      Prefer: "return=minimal"
+    },
+    body: JSON.stringify({
+      code: codeKey,
+      state_json: snapshotState
+    })
+  });
+
+  if (response.ok) return { ok: true, duplicate: false };
+
+  if (response.status === 409) {
+    return { ok: false, duplicate: true };
+  }
+
+  const text = await response.text();
+  if (text.includes("duplicate key")) {
+    return { ok: false, duplicate: true };
+  }
+
+  throw new Error(`Save failed (${response.status})`);
+}
+
+async function saveSnapshotRemote(snapshotState) {
+  for (let i = 0; i < 200; i += 1) {
+    const words = generateRandomWords();
+    const codeKey = codeKeyFromWords(words);
+    const display = codeDisplayFromWords(words);
+
+    const result = await tryInsertSnapshot(codeKey, snapshotState);
+    if (result.ok) return { codeKey, display };
+    if (!result.duplicate) break;
+  }
+
+  throw new Error("Could not create a unique 3-word code");
 }
 
 function render() {
@@ -322,13 +322,29 @@ function render() {
       } else {
         const key = keyFor(row, allyClan.id);
         if (state[key]) toggle.classList.add("done");
-        toggle.addEventListener("click", () => {
+        toggle.addEventListener("click", async () => {
+          if (isBusy) return;
+
           const nextState = { ...state };
           nextState[key] = !nextState[key];
           if (!nextState[key]) delete nextState[key];
-          commitNewSnapshot(nextState);
-          renderStats();
-          toggle.classList.toggle("done", Boolean(state[key]));
+
+          try {
+            setBusy(true);
+            setProfileStatus("Saving new global code...");
+            const saved = await saveSnapshotRemote(nextState);
+            currentCodeKey = saved.codeKey;
+            localStorage.setItem(ACTIVE_CODE_KEY, saved.codeKey);
+            state = nextState;
+            profileCodeInput.value = saved.display;
+            setProfileStatus(`Saved new code: ${saved.display}`);
+            renderStats();
+            toggle.classList.toggle("done", Boolean(state[key]));
+          } catch (error) {
+            setProfileStatus(error.message, true);
+          } finally {
+            setBusy(false);
+          }
         });
       }
 
@@ -414,30 +430,49 @@ function download(filename, text) {
 
 randomizeBtn.addEventListener("click", randomizeNextRun);
 
-loadProfileBtn.addEventListener("click", () => {
+loadProfileBtn.addEventListener("click", async () => {
+  if (isBusy) return;
+
   const parsed = parseCodeInput(profileCodeInput.value);
   if (!parsed) {
     setProfileStatus("Code must be exactly 3 words (e.g. BlazingCrownSpire).", true);
     return;
   }
 
-  if (!hasSnapshot(parsed.codeKey)) {
-    setProfileStatus(`Code not found: ${parsed.display}`, true);
-    return;
-  }
+  try {
+    setBusy(true);
+    setProfileStatus(`Loading ${parsed.display}...`);
+    const loaded = await fetchSnapshot(parsed.codeKey);
+    if (!loaded) {
+      setProfileStatus(`Code not found: ${parsed.display}`, true);
+      return;
+    }
 
-  activateSnapshot(parsed.codeKey);
+    currentCodeKey = parsed.codeKey;
+    state = loaded;
+    localStorage.setItem(ACTIVE_CODE_KEY, parsed.codeKey);
+    profileCodeInput.value = parsed.display;
+    setProfileStatus(`Loaded code: ${parsed.display}`);
+    randomResultEl.textContent = "No run selected yet.";
+    render();
+  } catch (error) {
+    setProfileStatus(error.message, true);
+  } finally {
+    setBusy(false);
+  }
 });
 
 copyCodeBtn.addEventListener("click", async () => {
   const currentCode = displayFromCodeKey(currentCodeKey);
+  if (!currentCode) return;
+
   try {
     await navigator.clipboard.writeText(currentCode);
     setProfileStatus(`Copied code: ${currentCode}`);
   } catch {
     profileCodeInput.focus();
     profileCodeInput.select();
-    setProfileStatus("Copy failed in browser. Select and copy the code manually.", true);
+    setProfileStatus("Copy failed in browser. Select and copy manually.", true);
   }
 });
 
@@ -446,27 +481,44 @@ profileCodeInput.addEventListener("keydown", (event) => {
   loadProfileBtn.click();
 });
 
-resetBtn.addEventListener("click", () => {
-  if (!window.confirm("Create a new blank snapshot code?")) return;
-  commitNewSnapshot({});
-  randomResultEl.textContent = "No run selected yet.";
-  render();
+resetBtn.addEventListener("click", async () => {
+  if (isBusy) return;
+  if (!window.confirm("Create a new blank global snapshot code?")) return;
+
+  try {
+    setBusy(true);
+    setProfileStatus("Creating blank snapshot code...");
+    const saved = await saveSnapshotRemote({});
+    currentCodeKey = saved.codeKey;
+    state = {};
+    localStorage.setItem(ACTIVE_CODE_KEY, saved.codeKey);
+    profileCodeInput.value = saved.display;
+    setProfileStatus(`Saved new code: ${saved.display}`);
+    randomResultEl.textContent = "No run selected yet.";
+    render();
+  } catch (error) {
+    setProfileStatus(error.message, true);
+  } finally {
+    setBusy(false);
+  }
 });
 
 exportBtn.addEventListener("click", () => {
   const displayCode = displayFromCodeKey(currentCodeKey);
   const payload = {
-    version: 3,
+    version: 4,
     snapshotCode: displayCode,
     exportedAt: new Date().toISOString(),
     state
   };
-  download(`mt2-completion-${displayCode}.json`, JSON.stringify(payload, null, 2));
+  download(`mt2-completion-${displayCode || "snapshot"}.json`, JSON.stringify(payload, null, 2));
 });
 
 importBtn.addEventListener("click", () => importFileInput.click());
 
 importFileInput.addEventListener("change", async (event) => {
+  if (isBusy) return;
+
   const file = event.target.files?.[0];
   if (!file) return;
 
@@ -477,14 +529,65 @@ importFileInput.addEventListener("change", async (event) => {
       throw new Error("Invalid save format.");
     }
 
-    commitNewSnapshot(parsed.state);
-    randomResultEl.textContent = "Imported as a new snapshot code.";
+    setBusy(true);
+    setProfileStatus("Uploading imported snapshot...");
+    const saved = await saveSnapshotRemote(parsed.state);
+    currentCodeKey = saved.codeKey;
+    state = parsed.state;
+    localStorage.setItem(ACTIVE_CODE_KEY, saved.codeKey);
+    profileCodeInput.value = saved.display;
+    setProfileStatus(`Imported as code: ${saved.display}`);
+    randomResultEl.textContent = "No run selected yet.";
     render();
   } catch (error) {
-    randomResultEl.textContent = `Import failed: ${error.message}`;
+    setProfileStatus(error.message, true);
   } finally {
     importFileInput.value = "";
+    setBusy(false);
   }
 });
 
-activateSnapshot(currentCodeKey, state);
+async function initializeApp() {
+  try {
+    setBusy(true);
+    setProfileStatus("Connecting to global snapshot store...");
+
+    const storedCodeKey = localStorage.getItem(ACTIVE_CODE_KEY);
+    if (storedCodeKey) {
+      const existing = await fetchSnapshot(storedCodeKey);
+      if (existing) {
+        currentCodeKey = storedCodeKey;
+        state = existing;
+        profileCodeInput.value = displayFromCodeKey(storedCodeKey);
+        setProfileStatus(`Loaded code: ${displayFromCodeKey(storedCodeKey)}`);
+        render();
+        return;
+      }
+    }
+
+    let initialState = {};
+    const legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (legacyRaw) {
+      try {
+        const parsed = JSON.parse(legacyRaw);
+        if (typeof parsed === "object" && parsed) initialState = parsed;
+      } catch {
+        initialState = {};
+      }
+    }
+
+    const created = await saveSnapshotRemote(initialState);
+    currentCodeKey = created.codeKey;
+    state = initialState;
+    localStorage.setItem(ACTIVE_CODE_KEY, created.codeKey);
+    profileCodeInput.value = created.display;
+    setProfileStatus(`Created code: ${created.display}`);
+    render();
+  } catch (error) {
+    setProfileStatus(`Startup failed: ${error.message}`, true);
+  } finally {
+    setBusy(false);
+  }
+}
+
+initializeApp();
